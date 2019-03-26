@@ -3,26 +3,44 @@
 var mongoose = require('mongoose');
 var Car = mongoose.model('Cars');
 
-//Returns all cars in the DB
-exports.list_all_cars = function(req, res){
-    Car.find({}, function(err, car){
-        if (err) {
-            res.send(err);
-        }
-        res.json(car);
+const resErrOrCar = function(err, car, res) {
+    if(err) {
+        res.send(err);
+    }
+    res.json(car);
+}
+
+//Get a list of all cars in db, but only returns id, make and model
+//of each car. Meant to be slightly faster way of getting a list of all cars
+exports.get_car_list = function(req, res) {
+
+    Car.find({}, function(err, cars) {
+       if(err) {
+           res.send(err);
+       }
+
+       var ret = [];
+       cars.forEach((value) => {ret.push({
+          _id : value._id,
+          make : value.make,
+          model : value.model
+       })});
+       res.json(ret);
     });
-};
+}
+
+//Get a single car with params
+exports.get_car = function(req, res) {
+    Car.findOne({_id: req.params.carID},
+        (err, car) => {resErrOrCar(err, car, res)});
+}
+
 
 //Add a new car to the db
 exports.add_car = function(req, res) {
     var new_car = new Car(req.body);
 
-    new_car.save(function(err, car){
-        if (err){
-            res.send(err);
-        }
-        res.json(car);
-    })
+    new_car.save((err, car) => {resErrOrCar(err, car, res)});
 };
 
 //Search for cars. Possible search parameters are make, model and year by minimum and maximum value.
@@ -43,20 +61,13 @@ exports.query_cars = function(req, res) {
     delete query.maxYear;
 
 
-    Car.find( query, function(err, cars) {
-        if(err)
-            res.send(err);
-        res.json(cars);
-    });
+    Car.find( query, (err, car) => {resErrOrCar(err, car, res)});
 };
 
 //Update a car with the id given as req param carId
 exports.update_car = function(req, res) {
-    Car.findOneAndUpdate({_id: req.params.carId}, req.body, {new : true}, function(err, car) {
-        if(err)
-            res.send(err);
-        res.json(car);
-    });
+    Car.findOneAndUpdate({_id: req.params.carId}, req.body, {new : true},
+        (err, car) => {resErrOrCar(err, car, res)});
 };
 
 //Delete car with given id from the db
