@@ -20,7 +20,8 @@ var CarSchema = new Schema({
       required: "Enter the registration number"
     },
     inspectiondate: {
-        type: Date
+        type: Date,
+        required: "Enter the inspection date"
     },
     enginesize: {
         type: Number,
